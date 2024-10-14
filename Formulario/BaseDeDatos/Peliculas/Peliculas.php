@@ -12,36 +12,57 @@ if ($conn->connect_error) {
 echo "Connected successfully";
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
-    $pelicula = $_POST['pelicula'];
+    $pelicula = trim($_POST['pelicula']);
     $isan = trim($_POST['isan']);
     $año = $_POST['año'];
     $valoracion = $_POST['valoracion'];
 
-    $sql = "INSERT INTO peliculas (pelicula, ISAN, año, puntuacion)
-            VALUES ('$pelicula', '$isan', '$año', '$valoracion')";
+    if (strlen($isan) === 8) {
+        $checkSql = "SELECT * FROM peliculas WHERE ISAN = '$isan'";
+        $result = $conn->query($checkSql);
 
-    if ($conn->query($sql) === TRUE) {
-        echo "Datos insertados correctamente.";
+        if ($result->num_rows > 0) {
+            if (empty($pelicula)) {
+                $deleteSql = "DELETE FROM peliculas WHERE ISAN = '$isan'";
+                if ($conn->query($deleteSql) === TRUE) {
+                    echo "Película eliminada correctamente.";
+                } else {
+                    echo "Error al eliminar la película: " . $conn->error;
+                }
+            } else {
+                $updateSql = "UPDATE peliculas SET pelicula = '$pelicula', año = '$año', puntuacion = '$valoracion' WHERE ISAN = '$isan'";
+                if ($conn->query($updateSql) === TRUE) {
+                    echo "Película actualizada correctamente.";
+                } else {
+                    echo "Error al actualizar la película: " . $conn->error;
+                }
+            }
+        } else {
+            if (!empty($pelicula) && !empty($año) && !empty($valoracion)) {
+                $insertSql = "INSERT INTO peliculas (pelicula, ISAN, año, puntuacion) 
+                              VALUES ('$pelicula', '$isan', '$año', '$valoracion')";
+                if ($conn->query($insertSql) === TRUE) {
+                    echo "Película insertada correctamente.";
+                } else {
+                    echo "Error al insertar la película: " . $conn->error;
+                }
+            } else {
+                echo "Error: Todos los campos deben estar completos para insertar un nuevo registro.";
+            }
+        }
     } else {
-        echo "Error al insertar los datos: " . $conn->error;
+        echo "Error: El ISAN debe tener exactamente 8 dígitos.";
     }
 }
 
-$conn->close();
+$query = "SELECT * FROM peliculas";
+$result = $conn->query($query);
 ?>
+
 <html>
     <head>
     </head>
     <body>
-        <h1>Lista de peliculas</h1>
-        <table border=1>
-            <tr>
-                <td>Pelicula</td>
-                <td>ISAN</td>
-                <td>Año</td>
-                <td>Valoracion</td>
-            </tr>
-        </table><br><br>
         <form method="POST" action="Peliculas.php">
             <label for="pelicula">Nombre de la Pelicula:</label>
             <input type="text" id="pelicula" name="pelicula" required><br><br>
@@ -60,5 +81,33 @@ $conn->close();
             <br><br>
             <button type="submit">Enviar Formulario</button>
         </form>
+
+        <h1>Lista de películas</h1>
+        <table border=1>
+            <tr>
+                <td>Pelicula</td>
+                <td>ISAN</td>
+                <td>Año</td>
+                <td>Valoracion</td>
+            </tr>
+            <?php
+            if ($result && $result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row['pelicula']) . "</td>"; // Escapar datos para seguridad
+                    echo "<td>" . htmlspecialchars($row['ISAN']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['año']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['puntuacion']) . "</td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='4'>No hay películas en la base de datos.</td></tr>";
+            }
+            ?>
+        </table><br><br>
     </body>
 </html>
+
+<?php
+$conn->close();
+?>

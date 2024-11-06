@@ -10,7 +10,15 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 echo "Connected successfully";
-
+/*
+$sql = "Create table peliculas{
+pelicula varchar(50),
+ISAN varchar(24),
+año date,
+puntuacion int(5);
+}";
+$conn->query($sql);
+*/
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
     $pelicula = trim($_POST['pelicula']);
     $isan = trim($_POST['isan']);

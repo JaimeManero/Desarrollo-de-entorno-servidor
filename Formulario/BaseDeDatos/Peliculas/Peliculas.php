@@ -17,7 +17,15 @@ ISAN varchar(24),
 año date,
 puntuacion int(5);
 }";
+$sql = "Create table registro{
+nombre varchar(50),
+contra varchar(50),
+email varchar(50);
+}";
+
 $conn->query($sql);
+
+
 */
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
     $pelicula = trim($_POST['pelicula']);
